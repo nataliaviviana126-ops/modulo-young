@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Calculadora de Módulo de Young</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="hicon">E</div>
+  <div class="htitle">
+    <h1>Calculadora de Módulo de Young</h1>
+    <p>Descubre qué tan rígido o flexible es un material</p>
+  </div>
+</div>
+
+<!-- FORMULA BAR -->
+<div class="fbar">
+  <div class="fitem">
+    <span class="fmath"><b>σ</b> = F / A</span>
+    <span class="fname">Esfuerzo</span>
+    <span class="fdesc">Fuerza ÷ Área de la sección</span>
+  </div>
+
+  <span class="fsep">÷</span>
+
+  <div class="fitem">
+    <span class="fmath"><b>ε</b> = ΔL / L</span>
+    <span class="fname">Deformación unitaria</span>
+    <span class="fdesc">Cuánto se estiró en proporción</span>
+  </div>
+
+  <span class="fsep">=</span>
+
+  <div class="fitem">
+    <span class="fmath hl"><b>E = σ / ε</b></span>
+    <span class="fname" style="color:#7c9aff;">Módulo de Young</span>
+    <span class="fdesc">Rigidez del material</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- TWO COL -->
+  <div class="two-col">
+
+    <!-- INPUT -->
+    <div class="card">
+      <div class="ctitle">¿Con qué material trabajas?</div>
+
+      <div class="fgroup">
+        <div class="flabel">Elige el material</div>
+
+        <select id="matSel" onchange="onMatChange()">
+          <option value="acero">Acero</option>
+          <option value="aluminio">Aluminio</option>
+          <option value="cobre">Cobre</option>
+          <option value="titanio">Titanio</option>
+          <option value="hierro">Hierro fundido</option>
+        </select>
+      </div>
+
+      <div class="fgroup">
+        <div class="flabel">Ingresa los datos del ensayo</div>
+
+        <div class="two-inp">
+
+          <div class="inplabel">
+            <div class="vtag">
+              <span class="vbadge">F</span>
+              — Fuerza aplicada (N)
+            </div>
+
+            <input type="number" id="inF" value="10000" placeholder="N"/>
+          </div>
+
+          <div class="inplabel">
+            <div class="vtag">
+              <span class="vbadge">A</span>
+              — Área transversal (m²)
+            </div>
+
+            <input type="number" id="inA" value="0.005" step="any" placeholder="m²"/>
+          </div>
+
+        </div>
+
+        <div class="two-inp">
+
+          <div class="inplabel">
+            <div class="vtag">
+              <span class="vbadge g">ΔL</span>
+              — Cuánto se estiró (m)
+            </div>
+
+            <input type="number" id="inDL" value="0.002" step="any" placeholder="m"/>
+          </div>
+
+          <div class="inplabel">
+            <div class="vtag">
+              <span class="vbadge g">L</span>
+              — Largo original (m)
+            </div>
+
+            <input type="number" id="inL" value="1.0" step="any" placeholder="m"/>
+          </div>
+
+        </div>
+      </div>
+
+      <button class="bcalc" onclick="calculate()">Calcular</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card">
+
+      <div class="ctitle">Resultados</div>
+
+      <div class="rgrid">
+
+        <div class="rchip">
+          <div class="cheader">
+            <span class="cbadge">σ = F/A</span>
+            <span class="cname">Esfuerzo</span>
+          </div>
+
+          <div class="cval" id="outSigma">—</div>
+        </div>
+
+        <div class="rchip">
+          <div class="cheader">
+            <span class="cbadge g2">ε = ΔL/L</span>
+            <span class="cname">Deformación</span>
+          </div>
+
+          <div class="cval" id="outEps">—</div>
+        </div>
+
+        <div class="rchip big">
+          <div class="cheader">
+            <span class="cbadge">E = σ/ε</span>
+            <span class="cname">Módulo de Young</span>
+          </div>
+
+          <div class="cval" id="outE">—</div>
+        </div>
+
+      </div>
+
+      <div class="rref">
+        <div class="rref-lbl">E de referencia del material</div>
+        <div class="rref-val" id="outEref">200 GPa</div>
+      </div>
+
+      <div class="ralert">
+        <div>
+          Material:
+          <span class="mn" id="aName">Acero</span>
+        </div>
+
+        <div class="yt">
+          Se deforma permanentemente a partir de:
+          <span id="aYield">250 MPa</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- GRAPH -->
+  <div class="card gcardwrap">
+
+    <div class="gheader">
+      <h2>Gráfica: fuerza vs estiramiento</h2>
+      <span class="mtag" id="graphTag">Acero</span>
+    </div>
+
+    <p class="gdesc">
+      La parte recta de la curva muestra cuando el material se estira y
+      <b>vuelve solo</b> (zona segura).
+      Pasada la línea amarilla, el material
+      <b>se deforma para siempre</b>.
+    </p>
+
+    <div class="chartbox">
+      <canvas id="myChart"></canvas>
+    </div>
+
+    <div class="glegend">
+
+      <div class="litem">
+        <div class="lline" style="background:#4a6cf7;"></div>
+        Zona segura — vuelve a su forma
+      </div>
+
+      <div class="litem">
+        <div class="lline" style="background:#555;"></div>
+        Zona de daño permanente
+      </div>
+
+      <div class="litem">
+        <div class="ldiamond"></div>
+        Punto de quiebre
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LEARN -->
+  <div class="lsect">
+
+    <h2>Aprende jugando</h2>
+
+    <p class="sub">
+      Toca cada tarjeta para ver la respuesta
+    </p>
+
+    <div class="cgrid" id="cgrid"></div>
+
+  </div>
+
+  <!-- TABLE -->
+  <div class="card tsect" style="padding:26px;">
+
+    <h2>¿Qué tan rígidos son los materiales comunes?</h2>
+
+    <p class="sub">
+      Cuanto mayor sea el número en la columna
+      <b>Rigidez (GPa)</b>,
+      más difícil es doblar o estirar ese material.
+    </p>
+
+    <p class="sub2">
+      El acero necesita fuerzas enormes para deformarse,
+      mientras que el aluminio cede más fácilmente.
+    </p>
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Rigidez (GPa)</th>
+          <th>Se daña a partir de (MPa)</th>
+          <th>¿Dónde se usa?</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>Acero</td>
+          <td>200</td>
+          <td>250</td>
+          <td>Puentes, edificios</td>
+        </tr>
+
+        <tr>
+          <td>Aluminio</td>
+          <td>70</td>
+          <td>270</td>
+          <td>Aviones, autos</td>
+        </tr>
+
+        <tr>
+          <td>Cobre</td>
+          <td>110</td>
+          <td>210</td>
+          <td>Cables eléctricos</td>
+        </tr>
+
+        <tr>
+          <td>Titanio</td>
+          <td>115</td>
+          <td>880</td>
+          <td>Implantes, cohetes</td>
+        </tr>
+
+        <tr>
+          <td>Hierro fundido</td>
+          <td>170</td>
+          <td>130</td>
+          <td>Maquinaria pesada</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
